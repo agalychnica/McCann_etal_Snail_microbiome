@@ -1,0 +1,55 @@
+## LINUX COMMANDS
+
+#Before running Decontam in R, you need to make sure the files are in the right format. 
+#We need a count data table (with unique ASV or OTU names in the first column). 
+#Transform the data for phyloseq from QIIME2 ASV table:
+
+#Change classification table into "OTU-style" table: 
+
+```
+#Change the top label #Name to #ASVID and all "-" to "." for all column headers:
+head -1 MA-sklearn_tax.csv | sed 's/\#NAME,/\#ASVID,/' | tr "-" "." > headers_MA-sklearn_tax.csv
+#Create a first column with unique ASV IDs (similat to OTU tables) and remove the taxonomy lineage column:
+sed '1d' MA-sklearn_tax.csv | awk -F',' 'BEGIN{num=1};{print "ASV_"num","$0;num=num+1}' | cut -d"," -f1,3-100 > pre-MA-sklearn_tax_ASVrenamed.csv
+#Combine the new headers with the new table into 1 table for analysis:
+cat headers_MA-sklearn_tax.csv pre-MA-sklearn_tax_ASVrenamed.csv > MA-sklearn_tax_ASVrenamed.csv
+```
+
+#Create taxonomy table:
+
+```
+#Create new headers:
+echo "ASVID,Domain,Phylum,Class,Order,Family,Genus,Species" > header-taxonomy.txt
+#Create taxonomy table (without counts or samples):
+sed '1d' MA-sklearn_tax.csv | awk -F',' 'BEGIN{num=1};{print "ASV_"num","$1;num=num+1}' | sed 's/;__/;NA/g' > pre-taxonomy_table.csv
+#Combine the new headers with the new table into 1 table for analysis:
+cat header-taxonomy.txt pre-taxonomy_table.csv > taxonomy_table.csv
+```
+
+#Metadata table:
+
+#Done manually. I selected the columns I needed based on the example, and changed values accordingly (for example, True Sample or Control Sample, and changed some of the Group names). File is called: sample_data.txt
+
+
+#----
+
+#AFTER the Decontam analysis in R
+#To get the pruned table with taxonomy (as the original was).
+
+#Create the full table (similar to the command to create the OTU/style table):
+
+```
+sed '1d' MA-sklearn_tax.csv | awk -F',' 'BEGIN{num=1};{print "ASV_"num","$0;num=num+1}' > pretab.csv
+head -1 MA-sklearn_tax.csv | sed 's/\#NAME,/\ASVID,/;s/,/,Taxonomy,/1' > headers_MA-sklearn_tax.csv
+cat headers_MA-sklearn_tax.csv pretab.csv > ASV_taxonomy_abundances_fulltable.csv
+```
+
+#Get the list to remove:
+
+grep "TRUE" ASV_contaminant_analysis_results.txt | cut -f1 | tr -d '"' | sed 's/$/,/' > list_to_remove
+
+#Remove and prepare table as original (without ASV labels and displaying full taxonomy in first column):
+
+```
+grep -v -f list_to_remove ASV_taxonomy_abundances_fulltable.csv | cut -d"," -f2-100 > Decont_Taxonomy_abundances_table.csv
+```
