@@ -1,0 +1,37 @@
+qiime tools import \
+  --type 'SampleData[PairedEndSequencesWithQuality]' \
+  --input-path casava-18-paired-end-demultiplexed \
+  --input-format CasavaOneEightSingleLanePerSampleDirFmt \
+  --output-path demux-paired-end.qza
+
+qiime dada2 denoise-single \ 
+--i-demultiplexed-seqs demux-paired-end.qza \
+--p-trim-left 13 \
+--p-trunc-len 250 \
+--o-representative-sequences rep-seqs-dada2.qza \
+--o-table table-dada2.qza \
+--o-denoising-stats stats-dada2.qza
+
+qiime feature-table summarize \
+  --i-table table-dada2.qza \
+  --o-visualization table-dada2.qzv \
+  --m-sample-metadata-file sample-metadata.tsv
+qiime feature-table tabulate-seqs \
+  --i-data rep-seqs-dada2.qza \
+  --o-visualization rep-seqs-dada2.qzv
+
+
+qiime feature-classifier classify-sklearn \
+  --i-classifier silva138_AB_V3-V4_classifier.qza
+  --i-reads rep-seqs-dada2.qza \
+  --o-classification sklearn-taxonomy.qza \
+  --verbose
+qiime metadata tabulate \
+  --m-input-file sklearn-taxonomy.qza \
+  --o-visualization sklearn-taxonomy.qzv
+
+qiime taxa barplot \
+  --i-table table-dada2.qza \
+  --i-taxonomy sklearn-taxonomy.qza \
+  --m-metadata-file sample-metadata.tsv \
+  --o-visualization taxa-bar-plots.qzv
