@@ -1,9 +1,11 @@
+#Data import step:
 qiime tools import \
   --type 'SampleData[PairedEndSequencesWithQuality]' \
   --input-path casava-18-paired-end-demultiplexed \
   --input-format CasavaOneEightSingleLanePerSampleDirFmt \
   --output-path demux-paired-end.qza
 
+#DADA2 - denoise step:
 qiime dada2 denoise-single \ 
 --i-demultiplexed-seqs demux-paired-end.qza \
 --p-trim-left 13 \
@@ -12,6 +14,7 @@ qiime dada2 denoise-single \
 --o-table table-dada2.qza \
 --o-denoising-stats stats-dada2.qza
 
+#Feature table generation:
 qiime feature-table summarize \
   --i-table table-dada2.qza \
   --o-visualization table-dada2.qzv \
@@ -20,7 +23,7 @@ qiime feature-table tabulate-seqs \
   --i-data rep-seqs-dada2.qza \
   --o-visualization rep-seqs-dada2.qzv
 
-
+#Taxonomic Identification using Naive Bayes sklearn with pre-trained classifier (see Methods for more details):
 qiime feature-classifier classify-sklearn \
   --i-classifier silva138_AB_V3-V4_classifier.qza
   --i-reads rep-seqs-dada2.qza \
@@ -30,6 +33,7 @@ qiime metadata tabulate \
   --m-input-file sklearn-taxonomy.qza \
   --o-visualization sklearn-taxonomy.qzv
 
+#Taxonomic Bar plot generation:
 qiime taxa barplot \
   --i-table table-dada2.qza \
   --i-taxonomy sklearn-taxonomy.qza \
