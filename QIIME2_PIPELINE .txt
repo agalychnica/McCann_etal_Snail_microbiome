@@ -23,7 +23,9 @@ qiime feature-table tabulate-seqs \
   --i-data rep-seqs-dada2.qza \
   --o-visualization rep-seqs-dada2.qzv
 
-#Taxonomic Identification using Naive Bayes sklearn with pre-trained classifier (see Methods for more details):
+#Taxonomic Identification using Naive Bayes sklearn with pre-trained classifier (file called "silva138_AB_V3-V4_classifier.qza" #downloaded from https://github.com/Jiung-Wen/q2-silva-V3V4classifier). In that github repository, all the commands used to train the #classifier, as well as the links and versions of the SILVA database are provided to enable full replication.
+#See Methods section in the main text for more details:
+
 qiime feature-classifier classify-sklearn \
   --i-classifier silva138_AB_V3-V4_classifier.qza
   --i-reads rep-seqs-dada2.qza \
@@ -32,6 +34,7 @@ qiime feature-classifier classify-sklearn \
 qiime metadata tabulate \
   --m-input-file sklearn-taxonomy.qza \
   --o-visualization sklearn-taxonomy.qzv
+
 
 #Taxonomic Bar plot generation:
 qiime taxa barplot \
